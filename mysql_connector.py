@@ -19,25 +19,37 @@ class Connector:
     connection = self.__connect()
     cursor = connection.cursor()
     if self.__check_sql(sql):
-      result = self.__manipulate_query(cursor, sql)
+      result, err = self.__manipulate_query(cursor, sql)
     else:
-      result = self.__search_query(cursor, sql)
+      result, err = self.__search_query(cursor, sql)
     connection.close()
-    return result
+    return result, err
 
   def __search_query(self, cursor, sql):
-    cursor.execute(sql)
-    result = cursor.fetchall()
-    return result
+    try:
+      print(1)
+      row = cursor.execute(sql)
+      print(2)
+      result = cursor.fetchall()
+      print(3)
+      if row == 0:
+        print(4)
+        return None, {"message":"not exist", "errno":1602}
+      else:
+        print(5)
+        return result, None
+    except Exception as error:
+      print(6)
+      return None, error
 
   def __manipulate_query(self, cursor, sql):
     try:
       result = cursor.execute(sql)
       cursor.fetchall()
       connection.commit()
-      return result
+      return result, None
     except Exception as error:
-      return error.args
+      return None, error.args
 
   def __check_sql(self, sql):
     return sql.find("select") == -1 and sql.find("SELECT") == -1
